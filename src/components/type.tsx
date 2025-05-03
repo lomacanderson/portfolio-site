@@ -1,6 +1,6 @@
 import Typewriter from "typewriter-effect";
 
-function Type() {
+export function RoleType() {
     return (
       <Typewriter
       options={{
@@ -29,4 +29,37 @@ function Type() {
     );
   }
 
-export default Type;
+export function DebugType() {
+    return (
+      <Typewriter
+      options={{
+        delay: 50,
+      }}
+        onInit={(typewriter) => {
+          typewriter
+            .pauseFor(5000)
+            .typeString(", debugging,")
+            .pauseFor(2000)
+            .callFunction(() => typewriter.stop())
+            .start();
+        }}
+      />
+    );
+  }
+
+  export function OverrideType() {
+    return (
+      <Typewriter
+      options={{
+        delay: 50,
+      }}
+        onInit={(typewriter) => {
+          typewriter
+            .typeString("@Override")
+            .pauseFor(1000)
+            .callFunction(() => typewriter.stop())
+            .start();
+        }}
+      />
+    );
+  }

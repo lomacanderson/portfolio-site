@@ -24,7 +24,7 @@ export function Home() {
                 href="https://www.google.com/maps/place/Olympia,+WA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-red-600">
+                className="hover:text-red-600 transition">
                 <MdLocationPin/>
                 </a>
             Olympia, WA
@@ -32,21 +32,21 @@ export function Home() {
                 href="https://github.com/lomacanderson"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 hover:text-black">
+                className="mx-5 hover:text-black transition">
                 <FaGithub />
                 </a>
                 <a
                 href="https://www.linkedin.com/in/logan-m-anderson/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-sky-600">
+                className="hover:text-sky-600 transition">
                 <FaLinkedin />
                 </a>
                 <a
                 href="https://devpost.com/lomacanderson/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 hover:text-cyan-900">
+                className="mx-5 hover:text-cyan-900 transition">
                 <SiDevpost />
                 </a></h4>
             
