@@ -17,7 +17,7 @@ export function RoleType() {
             .typeString("Future Software Engineer")
             .pauseFor(1000)
             .deleteAll()
-            .typeString("Programming Nerd")
+            .typeString("Computer Nerd")
             .pauseFor(1000)
             .deleteAll()
             .typeString("Creative")
