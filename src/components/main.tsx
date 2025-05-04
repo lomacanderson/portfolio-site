@@ -5,7 +5,7 @@ import { Projects } from './projects.tsx'
 import { Contact } from './contact.tsx'
 export function Main() {
     return (
-    <main>
+    <main className="px-10 md:px-15 lg:px-25">
         <Home></Home>
         <About></About>
         <Experience></Experience>

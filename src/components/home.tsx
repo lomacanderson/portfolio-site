@@ -5,9 +5,9 @@ import { SiDevpost } from "react-icons/si";
 
 export function Home() {
     return (
-    <section id="Home" className="px-25 pt-10 flex flex-col md:flex-row items-center justify-between">
+    <section id="home" className="pt-10 flex flex-col md:flex-row items-center justify-between">
         <div>
-            <pre className="bg-gray-900 text-green-400 font-mono p-4 rounded text-lg w-fit">
+            <pre className="bg-gray-900 text-green-400 font-mono p-4 rounded xl:text-lg md:text-base text-sm w-fit">
                 <code>  
                     <span className="text-gray-300">&lt;</span>
                     <span className="text-purple-400">p</span>{''}
@@ -18,8 +18,8 @@ export function Home() {
                     <span className="text-gray-300">&gt;</span>
                 </code> 
             </pre>
-            <h2 className="text-8xl font-bold">Logan Anderson</h2>
-            <h4 className="text-3xl flex text-gray-500 items-center italic py-4"> 
+            <h2 className="text-7xl md:text-8xl font-bold">Logan Anderson</h2>
+            <h4 className="text-2xl md:text-3xl flex text-gray-500 items-center italic py-4"> 
                 <a
                 href="https://www.google.com/maps/place/Olympia,+WA"
                 target="_blank"

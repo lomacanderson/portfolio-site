@@ -8,7 +8,7 @@ export default function AnimatedRoles() {
     if (!containerRef.current) return;
 
     const lines = containerRef.current.querySelectorAll("p");
-    const delays = [2600, 8500, 13400, 16600, 19200];
+    const delays = [2600, 8500, 13400, 16500, 19050];
 
     lines.forEach((line, index) => {
         animate(line, {
@@ -46,7 +46,7 @@ export default function AnimatedRoles() {
         <span className="text-xl relative bottom-1.5">',</span>
       </p>
       <p id="role-3">
-        <span className="text-xl relative bottom-1.5">'</span>Programming Nerd
+        <span className="text-xl relative bottom-1.5">'</span>Computer Nerd
         <span className="text-xl relative bottom-1.5">',</span>
       </p>
       <p id="role-4">
