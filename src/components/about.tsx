@@ -75,7 +75,7 @@ export function About() {
                     <pre className="md:flex justify-center text-3xl md:text-4xl lg:text-5xl font-sans font-bold">
                       <div className="flex justify-center">
                         <span className="timer value lcd">0</span>
-                        <span> hours* </span>
+                        <span>+ hours* </span>
                       </div>
                         <span className="flex justify-center">coding<DebugType/>and testing</span>
                     </pre>
@@ -103,7 +103,7 @@ export function About() {
     &nbsp;&nbsp;<span className="text-purple-400">public</span> String[] syntaxColors() {'{\n'}
     &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-purple-400">return</span> <span className="text-text-teal-300">new</span> String[] {'{\n'}
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#FFFFFF"</span>{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;{'}'}';{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;{'}'};{'\n'}
     &nbsp;&nbsp;{'}'}{'\n'}
     {'}'}{'\n\n'}
     <span className="text-purple-400">class</span> Java <span className="text-purple-400">extends</span> Text {'{\n'}
