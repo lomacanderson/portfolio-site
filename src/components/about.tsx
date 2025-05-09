@@ -99,23 +99,26 @@ export function About() {
       </div>
       <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base text-sm">
       <code>
-    <span className="text-purple-400">class</span> Text {'{\n'}
-    &nbsp;&nbsp;<span className="text-purple-400">public</span> String[] syntaxColors() {'{\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-purple-400">return</span> <span className="text-text-teal-300">new</span> String[] {'{\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#FFFFFF"</span>{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;{'}'}';{'\n'}
+    <span className="text-[#569CD6]">class</span><span className="text-[#4EC9B0]"> TextBox </span>{'{\n'}
+    &nbsp;&nbsp;<span className="text-[#569CD6]">public</span><span className="text-[#4EC9B0]"> String</span>[] <span className="text-[#DCDCAA]">syntaxColors</span>() {'{\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">return new</span> <span className="text-[#4EC9B0]">String</span>[] {'{\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#FFFFFF"</span>{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;{'}'};{'\n'}
     &nbsp;&nbsp;{'}'}{'\n'}
     {'}'}{'\n\n'}
-    <span className="text-purple-400">class</span> Java <span className="text-purple-400">extends</span> Text {'{\n'}
-    &nbsp;&nbsp;<span className="text-purple-400">@Override</span>{'\n'}
-    &nbsp;&nbsp;<span className="text-purple-400">public</span> String[] syntaxColors() {'{\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-purple-400">return</span> <span className="text-text-teal-300">new</span> String[] {'{\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#FFFFFF"</span>,{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#C084FC"</span>,{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#FB923C"</span>,{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#FCD34D"</span>,{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#5EEAD4"</span>,{'\n'}
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-orange-400">"#D1D5DB"</span>{'\n'}
+    <span className="text-[#569CD6]">class</span><span className="text-[#4EC9B0]"> Java </span><span className="text-purple-400">extends</span><span className="text-[#4EC9B0]"> TextBox </span>{'{\n'}
+    &nbsp;&nbsp;@<span className="text-[#4EC9B0]">Override</span>{'\n'}
+    &nbsp;&nbsp;<span className="text-[#569CD6]">public</span><span className="text-[#4EC9B0]"> String</span>[] <span className="text-[#DCDCAA]">syntaxColors</span>() {'{\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">return new</span> <span className="text-[#4EC9B0]">String</span>[] {'{\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#569CD6"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#9CDCFE"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#C586C0"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#CE9178"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#DCDCAA"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#4EC9B0"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#D4D4D4"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#6A9955"</span>,{'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#B5CEA8"</span>{'\n'}
     &nbsp;&nbsp;&nbsp;&nbsp;{'}'};{'\n'}
     &nbsp;&nbsp;{'}'}{'\n'}
     {'}'}
