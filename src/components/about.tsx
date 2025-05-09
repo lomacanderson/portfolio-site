@@ -75,7 +75,7 @@ export function About() {
                     <pre className="md:flex justify-center text-3xl md:text-4xl lg:text-5xl font-sans font-bold">
                       <div className="flex justify-center">
                         <span className="timer value lcd">0</span>
-                        <span> hours* </span>
+                        <span>+ hours* </span>
                       </div>
                         <span className="flex justify-center">coding<DebugType/>and testing</span>
                     </pre>
