@@ -6,10 +6,11 @@ export function Header() {
     <nav className="flex gap-3 md:gap-5 pr-14">
                 <Link to="#home">Home </Link>
                 <Link to="#about">About </Link>
+                {/* Uncomment these sections once made
                 <Link to="#experience">Experience </Link> 
                 <Link to="#projects">Projects </Link>
                 <Link to="#contact">Contact </Link>
-                <Link to="#resume">Resume </Link>
+                <Link to="#resume">Resume </Link>*/}
             </nav>
 </header>
     )
