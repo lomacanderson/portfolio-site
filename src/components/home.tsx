@@ -7,15 +7,15 @@ export function Home() {
     return (
     <section id="home" className="pt-10 flex flex-col md:flex-row items-center justify-between">
         <div>
-            <pre className="bg-gray-900 text-green-400 font-mono p-4 rounded xl:text-lg md:text-base text-sm w-fit">
+            <pre className="bg-gray-900 font-mono p-4 rounded xl:text-lg md:text-base text-sm w-fit">
                 <code>  
-                    <span className="text-gray-300">&lt;</span>
-                    <span className="text-purple-400">p</span>{''}
-                    <span className="text-gray-300">&gt;</span>
+                    <span className="text-[#D4D4D4]">&lt;</span>
+                    <span className="text-[#569CD6]">p</span>
+                    <span className="text-[#D4D4D4]">&gt;</span>
                     <span className="text-white"> Hello World! My name is... </span>
-                    <span className="text-gray-300">&lt;/</span>
-                    <span className="text-purple-400">p</span>
-                    <span className="text-gray-300">&gt;</span>
+                    <span className="text-[#D4D4D4]">&lt;/</span>
+                    <span className="text-[#569CD6]">p</span>
+                    <span className="text-[#D4D4D4]">&gt;</span>
                 </code> 
             </pre>
             <h2 className="text-7xl md:text-8xl font-bold">Logan Anderson</h2>
