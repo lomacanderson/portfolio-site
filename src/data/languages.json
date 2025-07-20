@@ -1,6 +1,6 @@
 {"languages": [
 {"name":"Python", "icon":"/python-icon.svg"},
+{"name":"C#", "icon":"/csharp-icon.svg"},
 {"name":"Java", "icon":"/java-icon.svg"},
-{"name":"JavaScript", "icon":"/javascript-icon.svg"},
-{"name":"C++", "icon":"/isocpp-icon.svg"}
+{"name":"JavaScript", "icon":"/javascript-icon.svg"}
 ]}

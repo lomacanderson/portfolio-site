@@ -26,7 +26,7 @@ export function About() {
           duration: text,
           alternate: false,
           loop: false,
-          playbackRate: 0.1,
+          playbackRate: text/1500,
           onUpdate: self => {
             $timer.innerHTML = self.iterationCurrentTime.toFixed(0);
           },
@@ -92,7 +92,7 @@ export function About() {
                 <div className="py-5 w-full xl:max-w-1/3">
                 {languages.languages.map((lang, index) => (
         <button key={index} className={`justify-center overflow-hidden flex w-full items-center cursor-pointer border border-black my-7 rounded-3xl gap-5 p-6 text-5xl ${selLanguage === lang.name ? 'bg-blue-100 transition' : 'hover:bg-gray-100 transition bg-white'} transition`} onClick={() => setLanguage(lang.name)}>
-          <img src={lang.icon} alt={lang.name} className="w-20 h-20" />
+          <img src={lang.icon} alt={lang.name} className="h-20" />
           <span>{lang.name}</span>
         </button>
       ))}
