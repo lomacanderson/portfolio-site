@@ -44,7 +44,7 @@ export function About() {
           <h3 className="text-5xl font-bold">I am a...</h3>
           <AnimatedRoles />
         </div>
-        <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base sm:text-sm text-xs w-fit">
+        <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base text-xs w-fit">
           <code>
             <span className="text-[#C586C0]">from </span>
             <span className="text-[#4EC9B0]">life </span>
@@ -100,7 +100,7 @@ export function About() {
               </button>
             ))}
           </div>
-          <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base sm:text-sm text-xs">
+          <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base text-xs">
             <code>
               <span className="text-[#569CD6]">class</span><span className="text-[#4EC9B0]"> TextBox </span>{'{\n'}
               &nbsp;&nbsp;<span className="text-[#569CD6]">public</span><span className="text-[#4EC9B0]"> String</span>[] <span className="text-[#DCDCAA]">syntaxColors</span>() {'{\n'}
