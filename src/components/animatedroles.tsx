@@ -22,15 +22,15 @@ export default function AnimatedRoles() {
   }, []);
 
   return (
-    <div ref={containerRef} className="text-4xl py-5">
+    <div ref={containerRef} className="text-3xl lg:text-4xl py-3 md:py-4 lg:py-5">
       <p id="role-0">
-        <span className="text-xl relative bottom-1.5">['</span>Computer Science Student at{' '}
+        <span className="text-lg md:text-xl relative md:bottom-1.5">['</span>Computer Science Student at{' '}
             <a
                 href="https://engineering.oregonstate.edu/EECS"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline text-orange-600 font-bold">Oregon State</a>
-        <span className="text-xl relative bottom-1.5">',</span>
+        <span className="text-lg md:text-xl relative md:bottom-1.5">',</span>
       </p>
       <p id="role-1">
         <span className="text-xl relative bottom-1.5">'</span>Software Engineering Intern at{' '}
@@ -39,19 +39,19 @@ export default function AnimatedRoles() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline text-red-800 font-bold">Kimley-Horn</a>
-        <span className="text-xl relative bottom-1.5">',</span>
+        <span className="text-lg md:text-xl relative md:bottom-1.5">',</span>
       </p>
       <p id="role-2">
-        <span className="text-xl relative bottom-1.5">'</span>Future Software Engineer
-        <span className="text-xl relative bottom-1.5">',</span>
+        <span className="text-lg md:text-xl relative md:bottom-1.5">'</span>Future Software Engineer
+        <span className="text-lg md:text-xl relative md:bottom-1.5">',</span>
       </p>
       <p id="role-3">
-        <span className="text-xl relative bottom-1.5">'</span>Computer Nerd
-        <span className="text-xl relative bottom-1.5">',</span>
+        <span className="text-lg md:text-xl relative md:bottom-1.5">'</span>Computer Nerd
+        <span className="text-lg md:text-xl relative md:bottom-1.5">',</span>
       </p>
       <p id="role-4">
-        <span className="text-xl relative bottom-1.5">'</span>Creative
-        <span className="text-xl relative bottom-1.5">']</span>
+        <span className="text-lg md:text-xl relative md:bottom-1.5">'</span>Creative
+        <span className="text-lg md:text-xl relative md:bottom-1.5">']</span>
       </p>
     </div>
   );

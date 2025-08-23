@@ -7,7 +7,7 @@ import { Projects } from './projects.tsx'
 import { Contact } from './contact.tsx'
 export function Main() {
     return (
-        <main className="px-10 md:px-15 lg:px-25">
+        <main className="px-5 md:px-15 lg:px-25">
             <Routes>
                 <Route path="/" element={
                     <>

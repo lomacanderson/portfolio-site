@@ -7,7 +7,7 @@ export function Home() {
     return (
     <section id="home" className="pt-10 flex flex-col md:flex-row items-center justify-between">
         <div>
-            <pre className="bg-gray-900 font-mono p-4 rounded xl:text-lg md:text-base text-sm w-fit">
+            <pre className="bg-gray-900 font-mono p-4 rounded lg:text-lg md:text-base text-sm w-fit">
                 <code>  
                     <span className="text-[#D4D4D4]">&lt;</span>
                     <span className="text-[#569CD6]">p</span>
@@ -19,7 +19,7 @@ export function Home() {
                 </code> 
             </pre>
             <h2 className="text-7xl md:text-8xl font-bold">Logan Anderson</h2>
-            <h4 className="text-2xl md:text-3xl flex text-gray-500 items-center italic py-4"> 
+            <h4 className="text-2xl lg:text-3xl flex text-gray-500 items-center italic py-4"> 
                 <a
                 href="https://www.google.com/maps/place/Olympia,+WA"
                 target="_blank"
@@ -27,12 +27,12 @@ export function Home() {
                 className="hover:text-red-600 transition">
                 <MdLocationPin/>
                 </a>
-            Olympia, WA
-            <a
+                Olympia, WA
+                <a
                 href="https://github.com/lomacanderson"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mx-5 hover:text-black transition">
+                className="mx-3 md:mx-5 hover:text-black transition">
                 <FaGithub />
                 </a>
                 <a
@@ -46,12 +46,12 @@ export function Home() {
                 href="https://devpost.com/lomacanderson/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mx-5 hover:text-cyan-900 transition">
+                className="mx-3 md:mx-5 hover:text-cyan-900 transition">
                 <SiDevpost />
                 </a></h4>
             
         </div>
-        <img src={CartoonAvatar} className="w-137"/>
+        <img src={CartoonAvatar} className="lg:w-110 md-w-100 w-90"/>
     </section>
     )
 }
