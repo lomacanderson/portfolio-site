@@ -5,6 +5,7 @@ import { About } from './about.tsx'
 import { Experience } from './experience.tsx'
 import { Projects } from './projects.tsx'
 import { Contact } from './contact.tsx'
+import { Internship2025 } from './internship2025.tsx';
 export function Main() {
     return (
         <main className="px-5 md:px-15 lg:px-25">
@@ -18,15 +19,9 @@ export function Main() {
                         <Contact></Contact>
                     </>
                 } />
-                <Route path="/linkedin" element={<Redirect />}
+                <Route path="/internship2025" element={<Internship2025 />}
                 />
             </Routes>
         </main>
     )
-    function Redirect() {
-        useEffect(() => {
-            window.location.replace('http://linkedin.com/in/logan-m-anderson');
-        }, []);
-        return <p className="text-5xl font-bold">Redirecting...</p>;
-    }
 }
