@@ -1,9 +1,8 @@
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import { useState } from 'react';
-import codingWorkstation from '../assets/coding-workstation.jpg';
-import javaClassProject from '../assets/java-class-project.jpg';
-import loganOlympiaCapitalBuilding from '../assets/logan-olympia-capital-building.jpg';
-
+import SWInterns from '../assets/2025-sw-interns.jpg';
+import LoganPresentation from '../assets/logan_intern_presentation_2025.jpg';
+import QualityDay from '../assets/software_team_quality_day_2025.png';
 const Completionist = () => <span>I'm back!</span>;
 
 // Helper to calculate months and days between two dates
@@ -71,9 +70,9 @@ export function InternshipCountdown() {
 }
 
 const images = [
-    codingWorkstation,
-    javaClassProject,
-    loganOlympiaCapitalBuilding,
+    LoganPresentation,
+    SWInterns,
+    QualityDay
 ];
 
 function Gallery() {
