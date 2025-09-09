@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Home } from './home.tsx'
 import { About } from './about.tsx'
 import { Experience } from './experience.tsx'
