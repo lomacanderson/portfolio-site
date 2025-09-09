@@ -26,7 +26,7 @@ export function About() {
         duration: text,
         alternate: false,
         loop: false,
-        playbackRate: text/1500,
+        playbackRate: text / 1500,
         onUpdate: self => {
           $timer.innerHTML = self.iterationCurrentTime.toFixed(0);
         },
@@ -80,7 +80,7 @@ export function About() {
               <span className="timer value lcd">0</span>
               <span>+ hours* </span>
             </div>
-            <span className="hidden md:flex justify-center text-center">coding<DebugType/>and testing</span>
+            <span className="hidden md:flex justify-center text-center">coding<DebugType />and testing</span>
           </pre>
           <span className="flex md:hidden text-center text-3xl md:text-4xl lg:text-5xl font-bold font">coding, debugging, and testing with various languages, especially...</span>
           <span className="hidden md:flex justify-center text-center text-3xl md:text-4xl lg:text-5xl font-bold font">with various languages, especially...</span>
