@@ -65,7 +65,7 @@ export function InternshipCountdown() {
         <section className='sm:pt-10 flex flex-col'>
             <span className='text-3xl md:text-5xl text-center justify-center'>I will be returning to Kimley-Horn on</span>
             <span className='text-3xl md:text-5xl text-center font-bold justify-center'>June 16, 2026:</span>
-            <div className='text-5xl p-5 font-bold text-center justify-center'>
+            <div className='text-5xl py-5 font-bold text-center justify-center'>
                 <Countdown
                     date={new Date('2026-06-16T00:00:00')}
                     renderer={renderer}
