@@ -21,13 +21,13 @@ export function Home() {
             <h2 className="text-7xl md:text-8xl font-bold">Logan Anderson</h2>
             <h4 className="text-2xl lg:text-3xl flex text-gray-500 items-center italic py-4"> 
                 <a
-                href="https://www.google.com/maps/place/Olympia,+WA"
+                href="https://www.google.com/maps/place/Mesa,+AZ"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-red-600 transition">
                 <MdLocationPin/>
                 </a>
-                Olympia, WA
+                Mesa, AZ
                 <a
                 href="https://github.com/lomacanderson"
                 target="_blank"
