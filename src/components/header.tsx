@@ -1,17 +1,32 @@
 import { HashLink as Link } from 'react-router-hash-link';
+import { ThemeToggle } from './ThemeToggle';
+
 export function Header() {
     return (
-<header className="hidden md:flex items-center md:sticky top-0 z-1 justify-between p-4 bg-gray-100 opacity-95 shadow px-10 md:px-15 lg:px-25">
-    <h1 className="text-xl font-bold"><Link to="/#home">Logan Anderson</Link></h1>
-    <nav className="flex gap-3 md:gap-5 pr-14">
-                <Link to="/#home">Home </Link>
-                <Link to="/#about">About </Link>
-                {/* Uncomment these sections once made
-                <Link to="/#experience">Experience </Link> 
-                <Link to="/#projects">Projects </Link>
-                <Link to="/#contact">Contact </Link>
-                <Link to="/#resume">Resume </Link>*/}
-            </nav>
-</header>
-    )
-}
+        <header className="flex items-center sticky top-0 z-50 justify-between p-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 shadow-sm px-5 md:px-15 lg:px-25 transition-colors duration-300">
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
+                <Link to="/#home" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+                    Logan Anderson
+                </Link>
+            </h1>
+            <div className="flex items-center gap-4 md:gap-6">
+                <nav className="flex gap-4 md:gap-6 text-zinc-600 dark:text-zinc-300">
+                    <Link to="/#home" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">
+                        Home
+                    </Link>
+                    <Link to="/#about" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">
+                        About
+                    </Link>
+                    {/* Uncomment these sections once made
+                    <Link to="/#experience" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Experience</Link> 
+                    <Link to="/#projects" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Projects</Link>
+                    <Link to="/#contact" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Contact</Link>
+                    <Link to="/#resume" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Resume</Link>*/}
+                </nav>
+                <div className="border-l border-zinc-200 dark:border-zinc-800 pl-4 md:pl-6 h-6 flex items-center">
+                    <ThemeToggle />
+                </div>
+            </div>
+        </header>
+    );
+}

@@ -1,4 +1,4 @@
-import CartoonAvatar from '../assets/CartoonAvatar.svg'
+import CartoonAvatar from '../assets/CartoonAvatar.png'
 import { MdLocationPin } from "react-icons/md";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { SiDevpost } from "react-icons/si";
@@ -18,35 +18,35 @@ export function Home() {
                     <span className="text-[#D4D4D4]">&gt;</span>
                 </code> 
             </pre>
-            <h2 className="text-7xl md:text-8xl font-bold">Logan Anderson</h2>
-            <h4 className="text-2xl lg:text-3xl flex text-gray-500 items-center italic py-4"> 
+            <h2 className="text-7xl md:text-8xl font-bold text-zinc-900 dark:text-white">Logan Anderson</h2>
+            <h4 className="text-2xl lg:text-3xl flex text-zinc-500 dark:text-zinc-400 items-center italic py-4"> 
                 <a
-                href="https://www.google.com/maps/place/Olympia,+WA"
+                href="https://www.google.com/maps/place/Phoenix,+AZ"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-red-600 transition">
+                className="hover:text-red-600 dark:hover:text-red-500 transition">
                 <MdLocationPin/>
                 </a>
-                Olympia, WA
+                Phoenix, AZ
                 <a
                 href="https://github.com/lomacanderson"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mx-3 md:mx-5 hover:text-black transition">
+                className="mx-3 md:mx-5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
                 <FaGithub />
                 </a>
                 <a
                 href="https://www.linkedin.com/in/logan-m-anderson/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-sky-600 transition">
+                className="text-zinc-600 dark:text-zinc-400 hover:text-sky-600 dark:hover:text-sky-400 transition">
                 <FaLinkedin />
                 </a>
                 <a
                 href="https://devpost.com/lomacanderson/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mx-3 md:mx-5 hover:text-cyan-900 transition">
+                className="mx-3 md:mx-5 text-zinc-600 dark:text-zinc-400 hover:text-cyan-900 dark:hover:text-cyan-400 transition">
                 <SiDevpost />
                 </a></h4>
             

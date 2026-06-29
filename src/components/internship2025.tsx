@@ -50,9 +50,9 @@ const renderer = ({ hours, minutes, seconds, completed }: CountdownRenderProps) 
                     { value: minutes, label: 'minutes' },
                     { value: seconds, label: 'seconds' },
                 ].map(({ value, label }) => (
-                    <div key={label} className='flex bg-gray-100 rounded md:rounded-lg flex-col items-center h-23 w-18 md:h-40 md:w-32 justify-center'>
-                        <span className='text-5xl md:text-8xl font-bold'>{value}</span>
-                        <span className='text-sm md:text-base text-gray-500'>{label}</span>
+                    <div key={label} className='flex bg-zinc-100 dark:bg-zinc-900 rounded md:rounded-lg flex-col items-center h-23 w-18 md:h-40 md:w-32 justify-center transition-colors duration-300'>
+                        <span className='text-5xl md:text-8xl font-bold text-zinc-900 dark:text-white'>{value}</span>
+                        <span className='text-sm md:text-base text-zinc-550 dark:text-zinc-400'>{label}</span>
                     </div>
                 ))}
             </div>
@@ -62,9 +62,9 @@ const renderer = ({ hours, minutes, seconds, completed }: CountdownRenderProps) 
 
 export function InternshipCountdown() {
     return (
-        <section className='sm:pt-10 flex flex-col'>
-            <span className='text-3xl md:text-5xl text-center justify-center'>I will be returning to Kimley-Horn on</span>
-            <span className='text-3xl md:text-5xl text-center font-bold justify-center'>June 16, 2026:</span>
+        <section className='sm:pt-10 flex flex-col text-zinc-900 dark:text-white'>
+            <span className='text-3xl md:text-5xl text-center justify-center text-zinc-800 dark:text-zinc-200'>I will be returning to Kimley-Horn on</span>
+            <span className='text-3xl md:text-5xl text-center font-bold justify-center text-zinc-900 dark:text-white'>June 16, 2026:</span>
             <div className='text-5xl py-5 font-bold text-center justify-center'>
                 <Countdown
                     date={new Date('2026-06-16T00:00:00')}
@@ -115,14 +115,14 @@ function Gallery() {
                 </div>
                 <button
                     onClick={prevImage}
-                    className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 rounded-full shadow p-2 z-10"
+                    className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-white rounded-full shadow p-2 z-10 cursor-pointer transition-colors"
                     aria-label="Previous image"
                 >
                     <FaChevronLeft />
                 </button>
                 <button
                     onClick={nextImage}
-                    className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 rounded-full shadow p-2 z-10"
+                    className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-white rounded-full shadow p-2 z-10 cursor-pointer transition-colors"
                     aria-label="Next image"
                 >
                     <FaChevronRight />
@@ -135,23 +135,23 @@ function Gallery() {
 
 export function Internship2025() {
     return (
-        <section className='flex justify-center flex-col'>
+        <section className='flex justify-center flex-col text-zinc-900 dark:text-white'>
             <div className='flex justify-center my-5'>
                 <img src={KHPFP} className='self-center h-30 md:h-36 mx-5 rounded-full'/>
                 <div className='content-center'>
-                    <h1 className='text-4xl md:text-6xl font-bold justify-center md:py-2'>
-                        <Link to="/">Logan Anderson</Link>
+                    <h1 className='text-4xl md:text-6xl font-bold justify-center md:py-2 text-zinc-900 dark:text-white'>
+                        <Link to="/" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Logan Anderson</Link>
                     </h1>
-                    <h2 className='text-2xl md:text-4xl justify-center'>Software Intern | Phoenix</h2>
+                    <h2 className='text-2xl md:text-4xl justify-center text-zinc-600 dark:text-zinc-400'>Software Intern | Phoenix</h2>
                 </div>
             </div>
-            <h1 className='text-4xl md:text-6xl font-bold text-center justify-center py-5'>Thank you for a great 2025 internship!</h1>
+            <h1 className='text-4xl md:text-6xl font-bold text-center justify-center py-5 text-zinc-900 dark:text-white'>Thank you for a great 2025 internship!</h1>
             <Gallery />
             <InternshipCountdown />
-            <span className='text-3xl md:text-5xl text-center justify-center'>Until then, you can contact me here:</span>
+            <span className='text-3xl md:text-5xl text-center justify-center py-4 text-zinc-800 dark:text-zinc-200'>Until then, you can contact me here:</span>
             <div className='flex flex-col items-center py-5 sm:py-8 gap-2 sm:gap-5'>
-                <a href='mailto:lmandersonmail@gmail.com' className='text-2xl md:text-4xl text-center justify-center hover:text-blue-500 transition duration-300'> <IoMail className='inline-block'/> lmandersonmail@gmail.com</a>
-                <a href='https://www.linkedin.com/in/logan-m-anderson/' className='text-2xl md:text-4xl  text-center justify-center hover:text-blue-500 transition duration-300'> <FaLinkedin className='inline-block'/> logan-m-anderson</a>
+                <a href='mailto:lmandersonmail@gmail.com' className='text-2xl md:text-4xl text-center justify-center text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-450 transition duration-300'> <IoMail className='inline-block mr-2'/> lmandersonmail@gmail.com</a>
+                <a href='https://www.linkedin.com/in/logan-m-anderson/' className='text-2xl md:text-4xl text-center justify-center text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-450 transition duration-300'> <FaLinkedin className='inline-block mr-2'/> logan-m-anderson</a>
             </div>
         </section>
     );
