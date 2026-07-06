@@ -10,3 +10,8 @@ html, body {
 body {
   @apply bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased min-h-screen;
 }
+
+/* Force typewriter containers to flow inline */
+.Typewriter {
+  display: inline !important;
+}

@@ -9,18 +9,33 @@ export function RoleType() {
         onInit={(typewriter) => {
           typewriter
             .typeString("Computer Science Student at Oregon State")
+            .callFunction(() => {
+              window.dispatchEvent(new CustomEvent('role-typed', { detail: { index: 0 } }));
+            })
             .pauseFor(1000)
             .deleteAll()
             .typeString("Software Engineering Intern at Kimley-Horn")
+            .callFunction(() => {
+              window.dispatchEvent(new CustomEvent('role-typed', { detail: { index: 1 } }));
+            })
             .pauseFor(1000)
             .deleteAll()
             .typeString("Future Software Engineer")
+            .callFunction(() => {
+              window.dispatchEvent(new CustomEvent('role-typed', { detail: { index: 2 } }));
+            })
             .pauseFor(1000)
             .deleteAll()
             .typeString("Computer Nerd")
+            .callFunction(() => {
+              window.dispatchEvent(new CustomEvent('role-typed', { detail: { index: 3 } }));
+            })
             .pauseFor(1000)
             .deleteAll()
             .typeString("Creative")
+            .callFunction(() => {
+              window.dispatchEvent(new CustomEvent('role-typed', { detail: { index: 4 } }));
+            })
             .pauseFor(2000)
             .callFunction(() => typewriter.stop())
             .start();

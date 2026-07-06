@@ -8,17 +8,31 @@ export default function AnimatedRoles() {
     if (!containerRef.current) return;
 
     const lines = containerRef.current.querySelectorAll("p");
-    const delays = [2600, 8500, 13400, 16500, 19050];
 
-    lines.forEach((line, index) => {
+    // Hide all lines initially
+    lines.forEach((line) => {
+      line.style.opacity = "0";
+      line.style.transform = "translateY(-10px)";
+    });
+
+    const handleRoleTyped = (e: Event) => {
+      const customEvent = e as CustomEvent<{ index: number }>;
+      const { index } = customEvent.detail;
+      const line = lines[index];
+      if (line) {
         animate(line, {
           opacity: [0, 1],
           translateY: [-10, 0],
           easing: "easeOutExpo",
           duration: 600,
-          delay: delays[index],
         });
-      });
+      }
+    };
+
+    window.addEventListener('role-typed', handleRoleTyped);
+    return () => {
+      window.removeEventListener('role-typed', handleRoleTyped);
+    };
   }, []);
 
   return (

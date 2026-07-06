@@ -1,10 +1,14 @@
 import { RoleType, DebugType } from "./type";
 import AnimatedRoles from "./animatedroles";
 import languages from "../data/languages.json"
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { onScroll, createTimer } from 'animejs';
+import debug from "./snippets/debug";
+import roles from "./snippets/roles";
+import { useLanguage } from "./LanguageContext";
+
 export function About() {
-  const [selLanguage, setLanguage] = useState('')
+  const { selLanguage, setLanguage } = useLanguage()
   useEffect(() => {
     const fetchWakaTimeData = async () => {
       let text = 180 //last manual check
@@ -44,29 +48,8 @@ export function About() {
           <h3 className="md:text-5xl text-4xl font-bold text-zinc-900 dark:text-white">I am a...</h3>
           <AnimatedRoles />
         </div>
-        <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-lg md:text-base md:block hidden text-xs w-fit">
-          <code>
-            <span className="text-[#C586C0]">from </span>
-            <span className="text-[#4EC9B0]">life </span>
-            <span className="text-[#C586C0]">import </span>
-            <span className="text-[#9CDCFE]">current_roles</span>
-            <span className="invisible inline-block">                       </span>
-            <br />
-            <span className="text-[#9CDCFE]">role</span>
-            <span> = </span>
-            <span className="text-[#CE9178]">
-              '<span className="inline-block"><RoleType /></span>'
-            </span>
-            <br />
-            <span className="text-[#9CDCFE]">current_roles</span>
-            <span>.</span>
-            <span className="text-[#DCDCAA]">append</span>(<span className="text-[#9CDCFE]">role</span>)
-            <br />
-            <span className="text-[#DCDCAA]">print</span>
-            <span>(</span>
-            <span className="text-[#9CDCFE]">current_roles</span>
-            <span>)</span>
-          </code>
+        <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-sm md:text-xs md:block hidden text-[10px] w-[320px] md:w-[460px] lg:w-[500px] h-fit overflow-hidden">
+          {(roles[selLanguage] || roles['Python'])(<RoleType key="stable-typewriter" />)}
         </pre>
       </article>
       <article className="md:py-10">
@@ -101,29 +84,8 @@ export function About() {
               </button>
             ))}
           </div>
-          <pre className="bg-gray-900 text-white font-mono p-4 rounded lg:text-lg md:text-base text-sm">
-            <code>
-              <span className="text-[#569CD6]">class</span><span className="text-[#4EC9B0]"> TextBox </span>{'{\n'}
-              &nbsp;&nbsp;<span className="text-[#569CD6]">public</span><span className="text-[#4EC9B0]"> String</span>[] <span className="text-[#DCDCAA]">syntaxColors</span>() {'{\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">return new</span> <span className="text-[#4EC9B0]">String</span>[] {'{\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#FFFFFF"</span>{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;{'}'};{'\n'}
-              &nbsp;&nbsp;{'}'}{'\n'}
-              {'}'}{'\n\n'}
-              <span className="text-[#569CD6]">class</span><span className="text-[#4EC9B0]"> Java </span><span className="text-[#569CD6]">extends</span><span className="text-[#4EC9B0]"> TextBox </span>{'{\n'}
-              &nbsp;&nbsp;@<span className="text-[#4EC9B0]">Override</span>{'\n'}
-              &nbsp;&nbsp;<span className="text-[#569CD6]">public</span><span className="text-[#4EC9B0]"> String</span>[] <span className="text-[#DCDCAA]">syntaxColors</span>() {'{\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">return new</span> <span className="text-[#4EC9B0]">String</span>[] {'{\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#FFFFFF"</span>,{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#569CD6"</span>,{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#C586C0"</span>,{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#CE9178"</span>,{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#DCDCAA"</span>,{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#CE9178]">"#4EC9B0"</span>{'\n'}
-              &nbsp;&nbsp;&nbsp;&nbsp;{'}'};{'\n'}
-              &nbsp;&nbsp;{'}'}{'\n'}
-              {'}'}
-            </code>
+          <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-base md:text-sm text-xs min-w-[320px] md:min-w-[450px] h-fit overflow-x-auto">
+            {debug[selLanguage] || debug['Java']}
           </pre>
         </div>
       </article>
