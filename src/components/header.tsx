@@ -19,9 +19,9 @@ export function Header() {
                     </Link>
                     {/* Uncomment these sections once made
                     <Link to="/#experience" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Experience</Link> 
-                    <Link to="/#projects" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Projects</Link>
                     <Link to="/#contact" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Contact</Link>
                     <Link to="/#resume" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Resume</Link>*/}
+                    <Link to="/#projects" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-medium">Projects</Link>
                 </nav>
                 <div className="border-l border-zinc-200 dark:border-zinc-800 pl-4 md:pl-6 h-6 flex items-center">
                     <ThemeToggle />
