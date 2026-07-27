@@ -14,8 +14,8 @@ export function Main() {
                     <>
                         <Home></Home>
                         <About></About>
-                        <Experience></Experience>
                         <Projects></Projects>
+                        <Experience></Experience>
                         <Contact></Contact>
                     </>
                 } />
