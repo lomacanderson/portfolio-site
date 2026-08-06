@@ -1223,8 +1223,8 @@ export function ShaderBackground() {
     const resizeCanvas = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const scale = 1.0; // Render at full native resolution
-      const width = Math.floor(window.innerWidth * dpr * scale);
-      const height = Math.floor(window.innerHeight * dpr * scale);
+      const width = Math.floor((canvas.clientWidth || window.innerWidth) * dpr * scale);
+      const height = Math.floor((canvas.clientHeight || window.innerHeight) * dpr * scale);
 
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
@@ -1260,7 +1260,7 @@ export function ShaderBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-screen h-screen -z-50 pointer-events-none opacity-[0.18] dark:opacity-[0.14] contrast-[1.8] dark:contrast-100 blur-[2.5px] transition-opacity duration-1000 bg-transparent"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.22] dark:opacity-[0.16] contrast-[1.8] dark:contrast-100 blur-[2.5px] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]"
     />
   );
 }
