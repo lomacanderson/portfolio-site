@@ -1,41 +1,121 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
 import { ProjectCard } from './ProjectCard';
 import projects from '../data/projects';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BASE_VEL    = 0.00018;   // project-index units / ms (slow glide)
-const ROT_SPEED   = 0.16;      // heading degrees / ms  → 180° U-turn ≈ 1.1 s
+const BASE_VEL     = 0.00018;  // project-index units / ms at cruising speed
 
-// Road geometry (all % values are % of road height, px values use ROAD_H)
-const ROAD_H      = 88;        // road div height in px — must match inline style
-const LANE_MID    = 48;        // road Y-centre as % of road height
-const LANE_AMP    = 24;        // distance from centre to lane, as % of road height
-const LANE_AMP_PX = LANE_AMP / 100 * ROAD_H;  // ≈ 21 px
+// Road geometry, in px. Right-hand traffic: eastbound in the bottom lane.
+const ROAD_H       = 88;
+const LANE_BOTTOM  = 0.72 * ROAD_H;
+const LANE_TOP     = 0.24 * ROAD_H;
+const LANE_MID     = (LANE_BOTTOM + LANE_TOP) / 2;
+const TURN_R       = (LANE_BOTTOM - LANE_TOP) / 2;  // U-turn radius, lane to lane
+const CAR_W        = 72;       // car element size (SVG is drawn at half scale)
+const CAR_H        = 30;
+const END_MARGIN   = TURN_R + CAR_H / 2 + 8;        // room for the U-turn at each end
+
+// Driving, in px and seconds.
+const MIN_CRUISE   = 30;
+const MAX_CRUISE   = 150;
+const TURN_SPEED   = 40;       // top speed through a U-turn
+const ACCEL        = 90;
+const BRAKE        = 140;
+const SPEED_GAIN   = 2.5;      // how quickly the driver closes on the speed they want
+const SIGNAL_BEFORE = 80;      // indicator comes on this far before a U-turn
+// Dragging or clicking the road moves the car much faster than it drives, so
+// the carousel keeps up with the pointer, but still with smooth starts and stops.
+const FOLLOW_MAX_V = 1600;
+const FOLLOW_ACCEL = 5000;
 
 /**
- * Heading → car's top% using a cosine that pivots around the road Y-centre.
- *   heading=   0° → 72% (bottom/right-hand lane, going right)
- *   heading= -90° → 48% (road centre, mid right-wall U-turn arc, nose went up)
- *   heading=-180° → 24% (top/right-hand lane, going left)
- *   heading=-270° → 48% (road centre, mid left-wall U-turn arc, nose went down)
- *   heading=-360° → 72% (bottom lane again)
+ * The car drives a stadium-shaped loop: the bottom lane left→right, a U-turn
+ * around the right end, the top lane right→left, and a U-turn around the left
+ * end. `s` is the distance driven around it; segments 0 and 2 are the straights,
+ * 1 and 3 the half-circle turns.
  */
-function topFromHeading(h: number) {
-  return LANE_MID + LANE_AMP * Math.cos((h * Math.PI) / 180);
+interface Track { w: number; x0: number; x1: number; ls: number; la: number; total: number }
+
+function makeTrack(roadW: number): Track {
+  const x0 = END_MARGIN;
+  const x1 = Math.max(x0 + 1, roadW - END_MARGIN);
+  const ls = x1 - x0;
+  const la = Math.PI * TURN_R;
+  return { w: roadW, x0, x1, ls, la, total: 2 * ls + 2 * la };
+}
+
+const segStart = (t: Track, seg: number) => [0, t.ls, t.ls + t.la, 2 * t.ls + t.la][seg];
+
+function pose(t: Track, s: number) {
+  const u = ((s % t.total) + t.total) % t.total;
+  if (u < t.ls) {
+    return { seg: 0, into: u, x: t.x0 + u, y: LANE_BOTTOM, heading: 0 };
+  }
+  if (u < t.ls + t.la) {
+    const into = u - t.ls, a = into / TURN_R;
+    return { seg: 1, into, x: t.x1 + TURN_R * Math.sin(a), y: LANE_MID + TURN_R * Math.cos(a), heading: (-a * 180) / Math.PI };
+  }
+  if (u < 2 * t.ls + t.la) {
+    const into = u - t.ls - t.la;
+    return { seg: 2, into, x: t.x1 - into, y: LANE_TOP, heading: -180 };
+  }
+  const into = u - 2 * t.ls - t.la, a = into / TURN_R;
+  return { seg: 3, into, x: t.x0 - TURN_R * Math.sin(a), y: LANE_MID - TURN_R * Math.cos(a), heading: -180 - (a * 180) / Math.PI };
 }
 
 /**
- * Heading → lateral X-offset in px.
- * Rotating the car's offset vector (0, +LANE_AMP_PX) around (0,0) by heading CCW:
- *   x_offset = +LANE_AMP_PX * sin(heading)   (positive heading → positive x shift)
- * This gives the car an arc trajectory instead of just rotating in place.
- *   heading=   0° → 0 px    (on-centre, no lateral shift)
- *   heading= -90° → -21 px  (shifted left at mid right-wall U-turn)
- *   heading=-180° → 0 px    (back on-centre at top lane)
- *   heading=-270° → +21 px  (shifted right at mid left-wall U-turn)
+ * Acceleration while the car drives itself: cruise, brake steadily so it
+ * reaches each U-turn at turning speed, and pull up promptly when paused.
  */
-function xOffFromHeading(h: number) {
-  return LANE_AMP_PX * Math.sin((h * Math.PI) / 180);
+function autoAccel(t: Track, s: number, v: number, cruise: number, turnSpeed: number, paused: boolean) {
+  if (paused) {
+    const decel = Math.min(BRAKE * 0.7, Math.max(Math.abs(v) * 6, 20));
+    return -Math.sign(v) * decel;
+  }
+  const p = pose(t, s);
+  const inTurn = p.seg % 2 === 1;
+  let a = Math.max(-BRAKE, Math.min(ACCEL, ((inTurn ? turnSpeed : cruise) - v) * SPEED_GAIN));
+  if (!inTurn && v > turnSpeed) {
+    const need = (v * v - turnSpeed * turnSpeed) / (2 * Math.max(t.ls - p.into, 0.5));
+    if (need > BRAKE * 0.35) a = Math.min(a, -need);
+  }
+  return a;
+}
+
+/** Acceleration toward a dragged/clicked spot: speed up, then brake to stop on it. */
+function followAccel(target: number, s: number, v: number) {
+  const d = target - s;
+  const dist = Math.abs(d);
+  const dir = Math.sign(d);
+  if (dist < 1e-3) return -v * 30;
+  // Once stopping takes real braking, brake exactly hard enough to stop on the spot.
+  const closing = v * dir;
+  if (closing > 0) {
+    const stopDecel = (closing * closing) / (2 * dist);
+    if (stopDecel >= FOLLOW_ACCEL * 0.6) return -dir * Math.min(stopDecel, FOLLOW_ACCEL * 1.5);
+  }
+  const vDes = dir * Math.min(FOLLOW_MAX_V, Math.sqrt(2 * FOLLOW_ACCEL * 0.6 * dist));
+  return Math.max(-FOLLOW_ACCEL, Math.min(FOLLOW_ACCEL, (vDes - v) * 20));
+}
+
+/** Advance the car one small step; a braking car stops rather than reversing. */
+function integrate(s: number, v: number, a: number, h: number, stopAtZero: boolean) {
+  let v1 = v + a * h;
+  if (stopAtZero && v !== 0 && Math.sign(v1) !== Math.sign(v)) v1 = 0;
+  return { s: s + ((v + v1) / 2) * h, v: v1 };
+}
+
+/**
+ * Loop distance for road position x on the straight the car is on (or the one
+ * it's turning onto), so dragging moves it along its lane, reversing if needed.
+ */
+function targetFor(t: Track, s: number, x: number) {
+  const { seg } = pose(t, s);
+  const lap = s - (((s % t.total) + t.total) % t.total);
+  const cx = Math.max(t.x0, Math.min(t.x1, x));
+  if (seg === 0) return lap + (cx - t.x0);
+  if (seg === 3) return lap + t.total + (cx - t.x0);
+  return lap + t.ls + t.la + (t.x1 - cx);
 }
 
 // ─── Car SVG (front = right side of SVG) ─────────────────────────────────────
@@ -90,6 +170,22 @@ function CarSVG() {
           <stop offset="0%"   stopColor="#e0f7ff" stopOpacity="1" />
           <stop offset="40%"  stopColor="#80e0ff" stopOpacity="0.8" />
           <stop offset="100%" stopColor="#00bfff" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Light glows switched on by the animation loop (see CSS variables below) */}
+        <radialGradient id="brake-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#ff6b6b" stopOpacity="1" />
+          <stop offset="45%"  stopColor="#ff2a2a" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="reverse-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="amber-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#fff1c2" stopOpacity="1" />
+          <stop offset="40%"  stopColor="#ffb020" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#ff9500" stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -232,44 +328,62 @@ function CarSVG() {
 
       {/* ── Front Grill & Intake details ── */}
       <path d="M 117,26 Q 118,30 117,34" fill="none" stroke="#2e3440" strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* ── Lights driven by the animation loop through CSS variables ── */}
+      {/* Brake lights */}
+      <g style={{ opacity: 'var(--brake, 0)' }}>
+        <ellipse cx="27" cy="16.5" rx="7" ry="5" fill="url(#brake-glow)" />
+        <ellipse cx="27" cy="43.5" rx="7" ry="5" fill="url(#brake-glow)" />
+        <line x1="26.5" y1="20" x2="26.5" y2="40" stroke="#ff6b6b" strokeWidth="1.4" />
+      </g>
+      {/* Reversing lights */}
+      <g style={{ opacity: 'var(--reverse, 0)' }}>
+        <ellipse cx="20" cy="30" rx="9" ry="12" fill="url(#reverse-glow)" />
+        <rect x="25.6" y="21" width="2.6" height="3.2" rx="0.6" fill="#ffffff" />
+        <rect x="25.6" y="35.8" width="2.6" height="3.2" rx="0.6" fill="#ffffff" />
+      </g>
+      {/* Left indicators (both U-turns are to the left) */}
+      <g style={{ opacity: 'var(--blink, 0)' }}>
+        <ellipse cx="110" cy="12" rx="4.5" ry="2.8" fill="url(#amber-glow)" />
+        <ellipse cx="31" cy="11.5" rx="4.5" ry="2.8" fill="url(#amber-glow)" />
+      </g>
     </svg>
   );
 }
 
 // ─── Road Slider ──────────────────────────────────────────────────────────────
+// The car is positioned by the parent's animation loop writing straight to
+// carRef's style, so the slider never re-renders while it animates.
 interface RoadSliderProps {
-  progress:    number;   // 0–1
-  heading:     number;   // degrees (passed directly to CSS rotate)
-  xOffsetPx:   number;   // lateral arc offset in px
-  carTopPct:   number;   // 0–100 %
-  onSeek:      (progress: number) => void;
+  roadRef:     RefObject<HTMLDivElement | null>;
+  carRef:      RefObject<HTMLDivElement | null>;
+  getProgress: () => number;
+  onPointer:   (roadX: number) => void;     // pointer x inside the road, px
+  onSeek:      (progress: number) => void;  // keyboard seek, 0–1
   onDragStart: () => void;
   onDragEnd:   () => void;
 }
 
 function RoadSlider({
-  progress, heading, xOffsetPx, carTopPct,
-  onSeek, onDragStart, onDragEnd,
+  roadRef, carRef, getProgress,
+  onPointer, onSeek, onDragStart, onDragEnd,
 }: RoadSliderProps) {
-  const roadRef     = useRef<HTMLDivElement>(null);
-  const isDragging  = useRef(false);
-  const onSeekRef   = useRef(onSeek);
+  const isDragging   = useRef(false);
+  const onPointerRef = useRef(onPointer);
   const onDragEndRef = useRef(onDragEnd);
-  useEffect(() => { onSeekRef.current   = onSeek;    }, [onSeek]);
+  useEffect(() => { onPointerRef.current = onPointer; }, [onPointer]);
   useEffect(() => { onDragEndRef.current = onDragEnd; }, [onDragEnd]);
 
-  const ratioFromX = useCallback((clientX: number) => {
+  const roadX = useCallback((clientX: number) => {
     const r = roadRef.current;
-    if (!r) return 0;
-    const rect = r.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-  }, []);
+    return r ? clientX - r.getBoundingClientRect().left : 0;
+  }, [roadRef]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent | TouchEvent) => {
       if (!isDragging.current) return;
       const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      onSeekRef.current(ratioFromX(x));
+      onPointerRef.current(roadX(x));
     };
     const onUp = () => {
       if (!isDragging.current) return;
@@ -286,29 +400,34 @@ function RoadSlider({
       window.removeEventListener('touchmove',  onMove as EventListener);
       window.removeEventListener('touchend',   onUp);
     };
-  }, [ratioFromX]);
+  }, [roadX]);
 
   const startDrag = (clientX: number) => {
     isDragging.current = true;
     onDragStart();
-    onSeekRef.current(ratioFromX(clientX));
+    onPointerRef.current(roadX(clientX));
   };
-
-  const carLeftPct = 5 + progress * 90;
 
   return (
     <div
       ref={roadRef}
       role="slider" tabIndex={0}
-      aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}
-      aria-label="Project navigation"
-      className="relative w-full rounded-xl cursor-pointer select-none overflow-hidden mt-6 outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-      style={{ height: ROAD_H, backgroundColor: '#5c6370' }}
+      aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}
+      aria-label="Scroll through projects"
+      className="relative w-full rounded-lg cursor-pointer select-none overflow-hidden mt-6 bg-zinc-600 dark:bg-zinc-700"
+      style={{ height: ROAD_H }}
       onMouseDown={(e) => startDrag(e.clientX)}
       onTouchStart={(e) => startDrag(e.touches[0].clientX)}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowRight') onSeekRef.current(Math.min(1, progress + 0.04));
-        if (e.key === 'ArrowLeft')  onSeekRef.current(Math.max(0, progress - 0.04));
+        const p = getProgress();
+        const to =
+          e.key === 'ArrowRight' ? Math.min(1, p + 0.04) :
+          e.key === 'ArrowLeft'  ? Math.max(0, p - 0.04) :
+          e.key === 'Home'       ? 0 :
+          e.key === 'End'        ? 1 : null;
+        if (to === null) return;
+        e.preventDefault();
+        onSeek(to);
       }}
     >
       {/* Surface depth */}
@@ -318,26 +437,27 @@ function RoadSlider({
            style={{ top:    8, height: 2, background: 'rgba(255,255,255,0.45)' }} />
       <div className="absolute left-0 right-0 pointer-events-none"
            style={{ bottom: 8, height: 2, background: 'rgba(255,255,255,0.45)' }} />
-      {/* Centre dashed divider */}
+      {/* Centre divider in lane-marking amber */}
       <div
         className="absolute left-0 right-0 pointer-events-none"
         style={{
-          top: '50%', height: 3, transform: 'translateY(-50%)',
+          top: LANE_MID, height: 3, transform: 'translateY(-50%)',
           background: 'repeating-linear-gradient(90deg,'
-            + 'rgba(255,255,255,0.85) 0,rgba(255,255,255,0.85) 28px,'
+            + 'var(--color-accent-300) 0,var(--color-accent-300) 28px,'
             + 'transparent 28px,transparent 54px)',
+          opacity: 0.9,
         }}
       />
-      {/* Car — no CSS transitions; all motion driven by RAF in parent */}
+      {/* Car: no CSS transitions; the parent's loop sets its transform and lights */}
       <div
-        className="absolute pointer-events-none"
+        ref={carRef}
+        className="absolute left-0 top-0 pointer-events-none"
         style={{
-          left:      `${carLeftPct}%`,
-          top:       `${carTopPct}%`,
-          // xOffsetPx shifts the car along the arc (pivot-around-Y-centre physics)
-          transform: `translate(calc(-50% + ${xOffsetPx}px), -50%) rotate(${heading}deg)`,
-          filter:    'drop-shadow(0 2px 6px rgba(0,0,0,0.55))',
-          willChange:'transform',
+          width: CAR_W,
+          height: CAR_H,
+          transform: `translate3d(${END_MARGIN - CAR_W / 2}px, ${LANE_BOTTOM - CAR_H / 2}px, 0)`,
+          filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.5))',
+          willChange: 'transform',
         }}
       >
         <CarSVG />
@@ -353,7 +473,8 @@ function useCardsPerView() {
     const upd = () => {
       if      (window.innerWidth < 768)  setCount(1);
       else if (window.innerWidth < 1024) setCount(2);
-      else                               setCount(3);
+      else if (window.innerWidth < 1700) setCount(3);
+      else                               setCount(4);
     };
     upd();
     window.addEventListener('resize', upd);
@@ -363,141 +484,205 @@ function useCardsPerView() {
 }
 
 // ─── Projects Section ─────────────────────────────────────────────────────────
+type DriveMode = 'auto' | 'drag' | 'seek';
+
 export function Projects() {
   const cardsPerView = useCardsPerView();
   const n            = projects.length;
   const maxIndex     = Math.max(0, n - cardsPerView);
 
-  // ── Animation refs (never trigger re-renders directly) ──
-  const posRef     = useRef(0);        // carousel position 0–maxIndex
-  const velRef     = useRef(BASE_VEL); // units/ms; positive = forward/right
-  const headingRef = useRef(0);        // current car heading (degrees)
-  const targetRef  = useRef(0);        // desired heading (decremented by 180° per U-turn)
-  // autoScrollPaused = don't advance position automatically.
-  // The RAF loop itself ALWAYS runs so manual seek updates are rendered instantly.
-  const autoScrollPausedRef = useRef(false);
-  const hoverRef   = useRef(false);    // true when hovering carousel cards
-  const dragRef    = useRef(false);    // true when dragging slider
-  const lastTRef   = useRef<number | null>(null);
-  const rafRef     = useRef<number>(0);
+  // ── Animation state lives in refs; the loop writes to the DOM directly so
+  //    the section doesn't re-render every frame. The car drives a loop around
+  //    the road and the carousel follows how far along the road it is. ──
+  const carS       = useRef(0);               // distance driven along the loop (px, unbounded)
+  const carV       = useRef(0);               // px/s along the loop; negative = reversing
+  const modeRef    = useRef<DriveMode>('auto');
+  const targetRef  = useRef(0);               // loop distance to steer to while dragging/seeking
+  const trackGeom  = useRef<Track>(makeTrack(800));
+  const lightsRef  = useRef({ brake: 0, reverse: 0 });
+  const maxIndexRef = useRef(maxIndex);
+  const hoverRef   = useRef(false);           // pointer or focus on the cards
+  const reducedMotionRef = useRef(false);
 
-  // ── React display state (synced from RAF at 60fps) ──
-  const [displayPos, setDisplayPos] = useState(0);
-  const [heading,    setHeading]    = useState(0);
-  const [xOffPx,     setXOffPx]     = useState(0);
-  const [carTop,     setCarTop]     = useState(topFromHeading(0));
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const roadRef    = useRef<HTMLDivElement>(null);
+  const carRef     = useRef<HTMLDivElement>(null);
 
-  // ── Central pause controller ──────────────────────────────────────────────
-  // Controls only the auto-scroll advance — RAF always keeps rendering.
-  const syncPause = useCallback(() => {
-    autoScrollPausedRef.current = hoverRef.current || dragRef.current;
-  }, []);
+  const progressOf = (t: Track, x: number) => Math.max(0, Math.min(1, (x - t.x0) / t.ls));
 
-  // ── U-turn trigger — always decrements target by 180° (always CCW arc) ──
-  // Turn 1 (right wall / drag-back): 0°→-180°, arc through top of road  ✓
-  // Turn 2 (left wall / drag-fwd):  -180°→-360°, arc through bottom of road ✓
-  // …alternates naturally on every bounce.
-  const triggerUTurn = useCallback(() => {
-    velRef.current  = -velRef.current;
-    targetRef.current -= 180;
-  }, []);
+  const getProgress = useCallback(
+    () => progressOf(trackGeom.current, pose(trackGeom.current, carS.current).x),
+    [],
+  );
 
-  // ── RAF loop — always running, never paused ──────────────────────────────
-  useEffect(() => {
-    const tick = (time: number) => {
-      if (lastTRef.current !== null) {
-        const dt = Math.min(time - lastTRef.current, 50);
-
-        // Auto-advance position only when not paused by hover/drag
-        if (!autoScrollPausedRef.current) {
-          posRef.current += velRef.current * dt;
-
-          // Wall bounce — skip if mid-turn to avoid re-triggering
-          const midTurn = Math.abs(targetRef.current - headingRef.current) > 1;
-          if (!midTurn) {
-            if (posRef.current >= maxIndex && velRef.current > 0) {
-              posRef.current = maxIndex;
-              triggerUTurn();
-            } else if (posRef.current <= 0 && velRef.current < 0) {
-              posRef.current = 0;
-              triggerUTurn();
-            }
-          }
-        }
-
-        // Always animate heading (U-turn rotation continues during drag/hover)
-        const diff = targetRef.current - headingRef.current;
-        if (Math.abs(diff) > 0.2) {
-          headingRef.current += Math.sign(diff) * Math.min(ROT_SPEED * dt, Math.abs(diff));
-        } else {
-          headingRef.current = targetRef.current;
-        }
-
-        // Always push display state so manual seeks render immediately
-        setDisplayPos(posRef.current);
-        setHeading(headingRef.current);
-        setXOffPx(xOffFromHeading(headingRef.current));
-        setCarTop(topFromHeading(headingRef.current));
-      }
-      lastTRef.current = time;
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [maxIndex, triggerUTurn]);
-
-  // ── Manual seek from road slider ─────────────────────────────────────────
-  const handleSeek = useCallback((ratio: number) => {
-    const newPos   = ratio * maxIndex;
-    const fwdDrag  = newPos > posRef.current + 0.01;
-    const bwdDrag  = newPos < posRef.current - 0.01;
-
-    // U-turn immediately when user drags opposite to current velocity
-    if ((fwdDrag && velRef.current < 0) || (bwdDrag && velRef.current > 0)) {
-      triggerUTurn();
+  // ── Paint current state to the DOM ───────────────────────────────────────
+  const lastPctRef = useRef(-1);
+  const paint = useCallback(() => {
+    const track = trackRef.current, car = carRef.current, road = roadRef.current;
+    if (!track || !car || !road) return;
+    const t = trackGeom.current;
+    const p = pose(t, carS.current);
+    const progress = progressOf(t, p.x);
+    track.style.transform = `translateX(${-((progress * maxIndexRef.current) / n) * 100}%)`;
+    car.style.transform =
+      `translate3d(${(p.x - CAR_W / 2).toFixed(2)}px, ${(p.y - CAR_H / 2).toFixed(2)}px, 0) rotate(${p.heading.toFixed(2)}deg)`;
+    const pct = Math.round(progress * 100);
+    if (pct !== lastPctRef.current) {
+      lastPctRef.current = pct;
+      road.setAttribute('aria-valuenow', String(pct));
     }
-    posRef.current = newPos;
-  }, [maxIndex, triggerUTurn]);
+  }, [n]);
 
-  // ── Pause control (cards hover only — NOT the road/section) ──────────────
-  const onCardsEnter  = () => { hoverRef.current = true;  syncPause(); };
-  const onCardsLeave  = () => { hoverRef.current = false; syncPause(); };
-  const onDragStart   = useCallback(() => { dragRef.current = true;  syncPause(); }, [syncPause]);
-  const onDragEnd     = useCallback(() => { dragRef.current = false; syncPause(); }, [syncPause]);
-
-  // Clamp on breakpoint change
+  // ── Animation loop — runs only while the section is on screen ────────────
   useEffect(() => {
-    posRef.current = Math.min(posRef.current, maxIndex);
-  }, [maxIndex]);
+    let raf = 0;
+    let lastT: number | null = null;
+    let clock = 0;
 
-  // ── Carousel maths ────────────────────────────────────────────────────────
+    const tick = (time: number) => {
+      raf = requestAnimationFrame(tick);
+      if (lastT === null) { lastT = time; return; }
+      const dt = Math.min((time - lastT) / 1000, 0.05);
+      lastT = time;
+      clock += dt;
+
+      const t = trackGeom.current;
+      const maxI = maxIndexRef.current;
+      // Keep the carousel's old pace: about 5.6 s per card at cruising speed.
+      const travel = maxI > 0 ? maxI / (BASE_VEL * 1000) : 10;
+      const cruise = Math.max(MIN_CRUISE, Math.min(MAX_CRUISE, t.ls / travel));
+      const turnSpeed = Math.min(TURN_SPEED, cruise * 0.7);
+      const paused = hoverRef.current || reducedMotionRef.current;
+      const mode = modeRef.current;
+
+      // Small fixed substeps keep the motion stable at low frame rates.
+      let a = 0;
+      const steps = Math.max(1, Math.ceil(dt * 240));
+      const h = dt / steps;
+      for (let i = 0; i < steps; i++) {
+        const auto = mode === 'auto';
+        a = auto
+          ? autoAccel(t, carS.current, carV.current, cruise, turnSpeed, paused)
+          : followAccel(targetRef.current, carS.current, carV.current);
+        const next = integrate(carS.current, carV.current, a, h, auto && paused);
+        carS.current = next.s;
+        carV.current = next.v;
+        // Settle onto the dragged/clicked spot instead of jittering around it.
+        if (!auto && Math.abs(targetRef.current - carS.current) < 0.6 && Math.abs(carV.current) < 30) {
+          carS.current = targetRef.current;
+          carV.current = 0;
+          if (mode === 'seek') { modeRef.current = 'auto'; break; }
+        }
+      }
+
+      // Lights: brake when slowing or holding still, white when reversing,
+      // left indicator before and during each U-turn.
+      const v = carV.current;
+      const holding = Math.abs(v) < 3 && (paused || modeRef.current !== 'auto');
+      const braking = a * Math.sign(v) < -25 || holding;
+      const L = lightsRef.current;
+      const k = Math.min(1, dt * 14);
+      L.brake += ((braking ? 1 : 0) - L.brake) * k;
+      L.reverse += ((v < -3 ? 1 : 0) - L.reverse) * k;
+      const p = pose(t, carS.current);
+      const turning = p.seg % 2 === 1 || t.ls - p.into < SIGNAL_BEFORE;
+      const blink = modeRef.current === 'auto' && !paused && v > 1 && turning && clock % 0.8 < 0.4;
+      const car = carRef.current;
+      if (car) {
+        car.style.setProperty('--brake', L.brake.toFixed(2));
+        car.style.setProperty('--reverse', L.reverse.toFixed(2));
+        car.style.setProperty('--blink', blink ? '1' : '0');
+      }
+
+      paint();
+    };
+
+    const start = () => { if (!raf) { lastT = null; raf = requestAnimationFrame(tick); } };
+    const stop  = () => { cancelAnimationFrame(raf); raf = 0; };
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotion = () => { reducedMotionRef.current = reduced.matches; };
+    onMotion();
+    reduced.addEventListener('change', onMotion);
+
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) start(); else stop();
+    });
+    if (sectionRef.current) io.observe(sectionRef.current);
+
+    return () => {
+      stop();
+      io.disconnect();
+      reduced.removeEventListener('change', onMotion);
+    };
+  }, [paint]);
+
+  // ── Keep the car's place on the road when the road changes width ────────
+  useEffect(() => {
+    const road = roadRef.current;
+    if (!road) return;
+    trackGeom.current = makeTrack(road.clientWidth);
+    paint();
+    const ro = new ResizeObserver(() => {
+      const old = trackGeom.current;
+      if (road.clientWidth === old.w) return;
+      const next = makeTrack(road.clientWidth);
+      const p = pose(old, carS.current);
+      carS.current = segStart(next, p.seg) + p.into * (p.seg % 2 === 0 ? next.ls / old.ls : 1);
+      targetRef.current = carS.current;
+      modeRef.current = 'auto';
+      trackGeom.current = next;
+      paint();
+    });
+    ro.observe(road);
+    return () => ro.disconnect();
+  }, [paint]);
+
+  // ── Dragging, clicking and keys steer the car to a spot on the road ──────
+  const onPointer   = useCallback((x: number) => {
+    targetRef.current = targetFor(trackGeom.current, carS.current, x);
+  }, []);
+  const onSeek      = useCallback((progress: number) => {
+    const t = trackGeom.current;
+    targetRef.current = targetFor(t, carS.current, t.x0 + progress * t.ls);
+    modeRef.current = 'seek';
+  }, []);
+  const onDragStart = useCallback(() => { modeRef.current = 'drag'; }, []);
+  const onDragEnd   = useCallback(() => { modeRef.current = 'seek'; }, []);
+
+  // ── Pause control (cards hover/focus only — NOT the road/section) ────────
+  const onCardsEnter = () => { hoverRef.current = true; };
+  const onCardsLeave = () => { hoverRef.current = false; };
+
+  useEffect(() => {
+    maxIndexRef.current = maxIndex;
+    paint();
+  }, [maxIndex, paint]);
+
   const innerWidthPct = (n / cardsPerView) * 100;
-  const translatePct  = -(displayPos / n) * 100;
   const cardWidthPct  = 100 / n;
-  const roadProgress  = maxIndex > 0 ? displayPos / maxIndex : 0;
 
   return (
-    <section id="projects" className="py-16">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white">Projects</h2>
+    <section id="projects" ref={sectionRef} className="py-16 md:py-24">
+      <div className="mb-10">
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Projects</h2>
         <p className="mt-3 text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl">
-          A selection of things I've built, from interactive tools to full-stack applications.
+          Drag the car along the road below to scroll through them.
         </p>
       </div>
 
-      {/* Carousel — hover here pauses auto-scroll so user can read cards */}
+      {/* Carousel — hover or focus here brings the car to a stop so people can read cards */}
       <div
-        className="overflow-hidden"
+        className="overflow-hidden -mx-2 [mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)]"
         onMouseEnter={onCardsEnter}
         onMouseLeave={onCardsLeave}
+        onFocus={onCardsEnter}
+        onBlur={onCardsLeave}
       >
         <div
-          style={{
-            display: 'flex',
-            width: `${innerWidthPct}%`,
-            transform: `translateX(${translatePct}%)`,
-          }}
+          ref={trackRef}
+          style={{ display: 'flex', width: `${innerWidthPct}%` }}
         >
           {projects.map((project) => (
             <div key={project.title} style={{ width: `${cardWidthPct}%`, padding: '4px 8px' }}>
@@ -507,13 +692,13 @@ export function Projects() {
         </div>
       </div>
 
-      {/* Road slider — hovering here does NOT pause; dragging does */}
+      {/* Road slider — drag or click to drive the car (and carousel) there */}
       <RoadSlider
-        progress={roadProgress}
-        heading={heading}
-        xOffsetPx={xOffPx}
-        carTopPct={carTop}
-        onSeek={handleSeek}
+        roadRef={roadRef}
+        carRef={carRef}
+        getProgress={getProgress}
+        onPointer={onPointer}
+        onSeek={onSeek}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
       />

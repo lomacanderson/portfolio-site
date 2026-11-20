@@ -9,7 +9,7 @@ import { BrotliDecoder } from './BrotliDecoder.tsx';
 import { TbError404Off } from "react-icons/tb";
 export function Main() {
     return (
-        <main className="px-5 md:px-15 lg:px-25">
+        <main className="mx-auto w-full max-w-[112rem] px-5 md:px-15 lg:px-25">
             <Routes>
                 <Route path="/" element={
                     <>

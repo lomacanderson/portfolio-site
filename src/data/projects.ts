@@ -47,7 +47,7 @@ const projects: Project[] = [
     imageUrl: PortfolioHome,
     tags: ['React', 'TypeScript', 'Tailwind CSS', 'Vite', 'Anime.js'],
     githubUrl: 'https://github.com/lomacanderson/portfolio-site',
-    liveUrl: 'logananderson.dev',
+    liveUrl: 'https://logananderson.dev',
   },
   {
     title: 'SpotShare',

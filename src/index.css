@@ -2,18 +2,79 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Design tokens: a road network at night.
+ * Overpass is an open-source take on Highway Gothic, the US road-sign face,
+ * which suits a portfolio built around traffic software; its mono cut is kept
+ * for code only. The neutrals are cool asphalt greys (the road slider's
+ * surface) rather than plain zinc, and the one accent is lane-marking amber,
+ * the same yellow as the road lines. Swap these scales to re-theme the site.
+ */
+@theme {
+  --font-sans: "Overpass", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Overpass Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Asphalt neutrals: 950 is the night road, 900 the shoulder, 800 the curb. */
+  --color-zinc-50:  #f6f7f9;
+  --color-zinc-100: #eceef1;
+  --color-zinc-200: #dde1e6;
+  --color-zinc-300: #c6cbd2;
+  --color-zinc-400: #99a0aa;
+  --color-zinc-500: #6c7380;
+  --color-zinc-600: #525965;
+  --color-zinc-700: #3b414b;
+  --color-zinc-800: #2a3038;
+  --color-zinc-900: #1b2027;
+  --color-zinc-950: #13171c;
+
+  --color-accent-50:  #fff8e6;
+  --color-accent-100: #fdecc0;
+  --color-accent-200: #fbd98a;
+  --color-accent-300: #f7c255;
+  --color-accent-400: #f0aa2c;
+  --color-accent-500: #dd8f12;
+  --color-accent-600: #b86f0b;
+  --color-accent-700: #925508;
+  --color-accent-800: #723f0a;
+  --color-accent-900: #5c340d;
+  --color-accent-950: #351b04;
+}
+
 /* Smooth transitions for theme switching */
 html, body {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, text-decoration-color 0.3s ease;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   @apply bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased min-h-screen;
 }
 
+/* Keep anchored sections clear of the sticky header */
+section[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent-400) 45%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 /* Force typewriter containers to flow inline */
 .Typewriter {
   display: inline !important;
+}
+
+.Typewriter__cursor {
+  color: var(--color-accent-400);
 }
 
 /* Animation for experience panel state changes */
@@ -30,4 +91,15 @@ body {
 
 .animate-fade-in-up {
   animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

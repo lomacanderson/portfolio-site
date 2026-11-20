@@ -1,52 +1,76 @@
-import CartoonAvatar from '../assets/CartoonAvatar.png'
+// Resized from CartoonAvatar.png (5796px, 3 MB); 832px covers the largest 2x display size.
+import avatar416 from '../assets/avatar-416.webp'
+import avatar832 from '../assets/avatar-832.webp'
 import { MdLocationPin } from "react-icons/md";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { SiDevpost } from "react-icons/si";
 import { useLanguage } from "./LanguageContext";
+import { CodeWindow } from "./CodeWindow";
 import helloworld from "./snippets/helloworld";
+
+const HELLO_FILES: Record<string, string> = {
+    '': 'index.html',
+    Python: 'hello.py',
+    Java: 'Hello.java',
+    JavaScript: 'hello.js',
+    'C#': 'Hello.cs',
+};
+
+const SOCIALS = [
+    { label: 'GitHub', href: 'https://github.com/lomacanderson', icon: <FaGithub /> },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/logan-m-anderson/', icon: <FaLinkedin /> },
+    { label: 'Devpost', href: 'https://devpost.com/lomacanderson/', icon: <SiDevpost /> },
+];
 
 export function Home() {
     const { selLanguage } = useLanguage();
     return (
-    <section id="home" className="pt-10 flex flex-col md:flex-row items-center justify-between">
-        <div>
-            <pre className="bg-gray-900 text-white font-mono p-4 rounded xl:text-base md:text-sm text-xs w-fit max-w-full md:max-w-[460px] lg:max-w-[500px] h-fit overflow-x-auto mb-6">
+    <section id="home" className="pt-12 md:pt-16 pb-8 flex flex-col md:flex-row md:items-center justify-between gap-10">
+        <div className="@container flex-1 min-w-0">
+            <CodeWindow
+                filename={HELLO_FILES[selLanguage] ?? 'Hello.java'}
+                className="w-fit max-w-full md:max-w-[460px] lg:max-w-[600px] mb-8"
+                codeClassName="text-xs md:text-sm xl:text-base"
+            >
               {helloworld[selLanguage] || helloworld['Java']}
-            </pre>
-            <h2 className="text-7xl md:text-8xl font-bold text-zinc-900 dark:text-white">Logan Anderson</h2>
-            <h4 className="text-2xl lg:text-3xl flex text-zinc-500 dark:text-zinc-400 items-center italic py-4"> 
+            </CodeWindow>
+            {/* "Anderson" is ~4.3em wide and can't wrap, so cap the size at 22% of the column (cqi). */}
+            <h1 className="text-[clamp(3.75rem,min(11vw,22cqi),7.5rem)] font-extrabold leading-[0.9] tracking-[-0.035em] text-zinc-900 dark:text-white">
+                Logan Anderson
+            </h1>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-base font-semibold">
                 <a
-                href="https://www.google.com/maps/place/Phoenix,+AZ"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-red-600 dark:hover:text-red-500 transition">
-                <MdLocationPin/>
+                    href="https://www.google.com/maps/place/Phoenix,+AZ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <MdLocationPin className="text-lg" aria-hidden="true" />
+                    Phoenix, AZ
                 </a>
-                Phoenix, AZ
-                <a
-                href="https://github.com/lomacanderson"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mx-3 md:mx-5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
-                <FaGithub />
-                </a>
-                <a
-                href="https://www.linkedin.com/in/logan-m-anderson/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-600 dark:text-zinc-400 hover:text-sky-600 dark:hover:text-sky-400 transition">
-                <FaLinkedin />
-                </a>
-                <a
-                href="https://devpost.com/lomacanderson/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mx-3 md:mx-5 text-zinc-600 dark:text-zinc-400 hover:text-cyan-900 dark:hover:text-cyan-400 transition">
-                <SiDevpost />
-                </a></h4>
-            
+                <span className="hidden sm:block h-5 w-px bg-zinc-300 dark:bg-zinc-700" aria-hidden="true" />
+                {SOCIALS.map((s) => (
+                    <a
+                        key={s.label}
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-accent-700 dark:hover:text-accent-400 transition-colors">
+                        <span className="text-lg" aria-hidden="true">{s.icon}</span>
+                        {s.label}
+                    </a>
+                ))}
+            </div>
         </div>
-        <img src={CartoonAvatar} className="lg:w-110 md-w-100 w-90"/>
+        <img
+            src={avatar832}
+            srcSet={`${avatar416} 416w, ${avatar832} 832w`}
+            sizes="(min-width: 1024px) 26rem, (min-width: 768px) 20rem, 18rem"
+            width={832}
+            height={832}
+            fetchPriority="high"
+            alt="Illustrated portrait of Logan Anderson"
+            className="w-72 md:w-80 lg:w-[26rem] shrink-0 self-center"
+        />
     </section>
     )
 }

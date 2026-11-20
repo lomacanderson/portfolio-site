@@ -12,7 +12,11 @@ const fragmentShaderSource = `/*
  */
 
 
-#ifdef GL_ES
+// highp where available: mediump (fp16 on mobile GPUs) can't resolve the
+// small hit epsilon, which made rays burn through every march step.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
 #endif
 
@@ -39,9 +43,13 @@ const vec4 iMouse = vec4(0.);
 #define COLOR_ROAD vec3(0.1)
 #define COLOR_ROAD_SIDEWALK vec3(.7)
 #define COLOR_CAR_ROOF vec3(.3)
-#define MAX_STEPS 256
-#define MIN_DISTANCE 0.0001
+#define MAX_STEPS 120
+#define MIN_DISTANCE 0.0005
 #define MAX_DISTANCE 10.
+// Past this ray length everything below the horizon is fully fogged to black,
+// so downward rays can stop early instead of grinding toward the horizon.
+#define MAX_TRACE 12.
+#define STEP_SCALE .5
 #define defaultBaseSize .3
 #define defaultBaseSpacing 2.5
 #define bounds vec3(7.0, 7.0, 0.)
@@ -106,6 +114,7 @@ struct TraceResult {
     vec3 q1;
     DistResult dist;
     float obj;
+    float hit;
 };
 
 
@@ -539,6 +548,9 @@ TraceResult trace(vec3 ro, vec3 rd) {
 
     DistResult dist;
 
+    // World-space ray direction (setSceneAngle is affine, so the offset cancels).
+    float worldDirZ = (setSceneAngle(ro + rd) - setSceneAngle(ro)).z;
+    float hit = 0.;
 
     for(int i = 0 ; i < MAX_STEPS ; i++) {
         p = ro + rd * ds;
@@ -555,14 +567,21 @@ TraceResult trace(vec3 ro, vec3 rd) {
         id = dist.id;
         q1 = dist.q1;
 
-        ds += dt * .4;
-
-        if (abs(dt) < MIN_DISTANCE || dt > MAX_DISTANCE) {
+        // Hit epsilon grows with distance (~one pixel footprint), so far
+        // surfaces converge in a handful of steps instead of dozens.
+        if (abs(dt) < max(MIN_DISTANCE, .0015 * ds)) {
+            hit = 1.;
             break;
         }
+        if (dt > MAX_DISTANCE || (ds > MAX_TRACE && worldDirZ <= 0.)) {
+            break;
+        }
+
+        ds += dt * STEP_SCALE;
     }
 
     TraceResult res;
+    res.hit = hit;
 
     res.id = id;
     res.dt = dt;
@@ -576,7 +595,7 @@ TraceResult trace(vec3 ro, vec3 rd) {
 }
 
 vec3 getNormal(vec3 p, float d) {
-    vec2 e = vec2(0.00001, 0.);
+    vec2 e = vec2(0.0005, 0.);
     vec3 n = d - vec3(
         getDist(p - e.xyy).d,
         getDist(p - e.yxy).d,
@@ -1086,7 +1105,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoords) {
     TraceResult tr = trace(ro, rd);
     float fogMultiplier = 0.;
 
-    if (tr.dt < MIN_DISTANCE) {
+    if (tr.hit > .5) {
         float objId = tr.obj;
 
         vec3 normal = vec3(0., 0., 1.);
@@ -1152,6 +1171,14 @@ void main(void)
     gl_FragColor.rgb = vec3(gray);
 }`;
 
+// The canvas is shown blurred at ~20% opacity, so rendering it at device
+// resolution is wasted work. Render a fraction of CSS pixels and let the
+// browser upscale it; cap the pixel count for very large screens.
+const RENDER_SCALE = 0.5;
+const MAX_PIXELS = 480_000;
+const FRAME_INTERVAL_MS = 1000 / 30; // the scene drifts slowly; 30fps is plenty
+const STILL_FRAME_TIME = 24; // seconds into the animation used for reduced motion
+
 export function ShaderBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -1159,13 +1186,16 @@ export function ShaderBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
-    if (!gl) {
-      console.error('WebGL not supported');
-      return;
-    }
+    const gl = canvas.getContext('webgl', {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      preserveDrawingBuffer: false,
+    }) as WebGLRenderingContext | null;
+    if (!gl) return;
 
-    const createShader = (gl: WebGLRenderingContext, type: number, source: string) => {
+    const createShader = (type: number, source: string) => {
       const shader = gl.createShader(type);
       if (!shader) return null;
       gl.shaderSource(shader, source);
@@ -1178,8 +1208,8 @@ export function ShaderBackground() {
       return shader;
     };
 
-    const vs = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fs = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const vs = createShader(gl.VERTEX_SHADER, vertexShaderSource);
+    const fs = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
     if (!vs || !fs) return;
 
     const program = gl.createProgram();
@@ -1198,58 +1228,91 @@ export function ShaderBackground() {
     const positionAttributeLocation = gl.getAttribLocation(program, 'position');
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([
-        -1, -1,
-         1, -1,
-        -1,  1,
-        -1,  1,
-         1, -1,
-         1,  1,
-      ]),
-      gl.STATIC_DRAW
-    );
-
+    // One oversized triangle covers the viewport with no diagonal seam.
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
     const timeUniformLocation = gl.getUniformLocation(program, 'time');
     const resolutionUniformLocation = gl.getUniformLocation(program, 'resolution');
 
-    let animationFrameId: number;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let animationFrameId = 0;
+    let lastFrame = 0;
+    let onScreen = true;
     const startTime = performance.now();
 
-    const resizeCanvas = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const scale = 1.0; // Render at full native resolution
-      const width = Math.floor((canvas.clientWidth || window.innerWidth) * dpr * scale);
-      const height = Math.floor((canvas.clientHeight || window.innerHeight) * dpr * scale);
+    const draw = (time: number) => {
+      gl.uniform1f(timeUniformLocation, time);
+      gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
 
+    const resizeCanvas = () => {
+      const cssW = canvas.clientWidth || window.innerWidth;
+      const cssH = canvas.clientHeight || window.innerHeight;
+      let scale = RENDER_SCALE;
+      if (cssW * cssH * scale * scale > MAX_PIXELS) {
+        scale = Math.sqrt(MAX_PIXELS / (cssW * cssH));
+      }
+      const width = Math.max(1, Math.round(cssW * scale));
+      const height = Math.max(1, Math.round(cssH * scale));
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
         gl.viewport(0, 0, width, height);
+        if (reducedMotion.matches) draw(STILL_FRAME_TIME);
       }
     };
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    const render = () => {
-      const time = (performance.now() - startTime) * 0.001;
-      gl.uniform1f(timeUniformLocation, time);
-      gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
-
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    const render = (now: number) => {
       animationFrameId = requestAnimationFrame(render);
+      if (now - lastFrame < FRAME_INTERVAL_MS) return;
+      lastFrame = now;
+      draw((now - startTime) * 0.001);
     };
 
-    render();
+    const stop = () => {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    };
+
+    // Only animate while the hero is on screen, the tab is visible and the
+    // visitor hasn't asked for reduced motion.
+    const sync = () => {
+      const shouldRun = onScreen && !document.hidden && !reducedMotion.matches;
+      if (shouldRun && !animationFrameId) {
+        animationFrameId = requestAnimationFrame(render);
+      } else if (!shouldRun && animationFrameId) {
+        stop();
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    resizeObserver.observe(canvas);
+    resizeCanvas();
+    draw(reducedMotion.matches ? STILL_FRAME_TIME : 0);
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      sync();
+    });
+    intersectionObserver.observe(canvas);
+
+    const onMotionChange = () => {
+      if (reducedMotion.matches) draw(STILL_FRAME_TIME);
+      sync();
+    };
+    document.addEventListener('visibilitychange', sync);
+    reducedMotion.addEventListener('change', onMotionChange);
+    sync();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resizeCanvas);
+      stop();
+      resizeObserver.disconnect();
+      intersectionObserver.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+      reducedMotion.removeEventListener('change', onMotionChange);
       gl.deleteBuffer(positionBuffer);
       gl.deleteProgram(program);
       gl.deleteShader(vs);
@@ -1260,7 +1323,10 @@ export function ShaderBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.22] dark:opacity-[0.16] contrast-[1.8] dark:contrast-100 blur-[2.5px] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]"
+      aria-hidden="true"
+      // Light mode inverts the night scene into a pale line drawing so the
+      // hero stays light and the text over it keeps its contrast.
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.22] dark:opacity-[0.16] contrast-[1.8] dark:contrast-100 invert dark:invert-0 blur-[2px] [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]"
     />
   );
 }

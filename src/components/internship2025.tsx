@@ -52,7 +52,7 @@ const renderer = ({ hours, minutes, seconds, completed }: CountdownRenderProps) 
                 ].map(({ value, label }) => (
                     <div key={label} className='flex bg-zinc-100 dark:bg-zinc-900 rounded md:rounded-lg flex-col items-center h-23 w-18 md:h-40 md:w-32 justify-center transition-colors duration-300'>
                         <span className='text-5xl md:text-8xl font-bold text-zinc-900 dark:text-white'>{value}</span>
-                        <span className='text-sm md:text-base text-zinc-550 dark:text-zinc-400'>{label}</span>
+                        <span className='text-sm md:text-base text-zinc-500 dark:text-zinc-400'>{label}</span>
                     </div>
                 ))}
             </div>
