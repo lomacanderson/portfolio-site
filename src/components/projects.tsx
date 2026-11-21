@@ -133,7 +133,9 @@ function CarSVG() {
     <svg
       width="72" height="30" viewBox="0 0 144 60"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block' }}
+      // Positioned so it paints over the headlight beams behind it; the shadow
+      // lives here rather than on the wrapper so the beams don't cast one.
+      style={{ display: 'block', position: 'relative', filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.5))' }}
     >
       <defs>
         {/* Car body paint — modern metallic white/silver gradient */}
@@ -186,6 +188,11 @@ function CarSVG() {
           <stop offset="0%"   stopColor="#fff1c2" stopOpacity="1" />
           <stop offset="40%"  stopColor="#ffb020" stopOpacity="0.9" />
           <stop offset="100%" stopColor="#ff9500" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="lamp-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="35%"  stopColor="#eaf5ff" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#cfe8ff" stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -329,6 +336,18 @@ function CarSVG() {
       {/* ── Front Grill & Intake details ── */}
       <path d="M 117,26 Q 118,30 117,34" fill="none" stroke="#2e3440" strokeWidth="1.5" strokeLinecap="round" />
 
+      {/* ── Night driving (dark mode): headlamps and tail lights on ── */}
+      {/* Tail lights, dimmer than the brake lights that brighten over them */}
+      <g className="opacity-0 dark:opacity-40 transition-opacity duration-300">
+        <ellipse cx="27" cy="16.5" rx="6" ry="4" fill="url(#brake-glow)" />
+        <ellipse cx="27" cy="43.5" rx="6" ry="4" fill="url(#brake-glow)" />
+      </g>
+      {/* Headlamp glare; the beams themselves are drawn under the car */}
+      <g className="opacity-0 dark:opacity-100 transition-opacity duration-300">
+        <ellipse cx="116" cy="16" rx="7" ry="4.5" fill="url(#lamp-glow)" />
+        <ellipse cx="116" cy="44" rx="7" ry="4.5" fill="url(#lamp-glow)" />
+      </g>
+
       {/* ── Lights driven by the animation loop through CSS variables ── */}
       {/* Brake lights */}
       <g style={{ opacity: 'var(--brake, 0)' }}>
@@ -346,6 +365,39 @@ function CarSVG() {
       <g style={{ opacity: 'var(--blink, 0)' }}>
         <ellipse cx="110" cy="12" rx="4.5" ry="2.8" fill="url(#amber-glow)" />
         <ellipse cx="31" cy="11.5" rx="4.5" ry="2.8" fill="url(#amber-glow)" />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Low beams lighting the road ahead, shown only in dark mode. Drawn in the
+ * car's own frame (the same 144×60 viewBox as CarSVG) so they swing round with
+ * it through the U-turns, and allowed to spill past the car's box; the road
+ * clips them at its edges.
+ */
+function HeadlightBeams() {
+  return (
+    <svg
+      width="72" height="30" viewBox="0 0 144 60"
+      overflow="visible"
+      aria-hidden="true"
+      className="absolute left-0 top-0 opacity-0 dark:opacity-100 transition-opacity duration-300"
+    >
+      <defs>
+        <linearGradient id="beam-fade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stopColor="#f2f7ff" stopOpacity="0.5" />
+          <stop offset="40%"  stopColor="#f2f7ff" stopOpacity="0.24" />
+          <stop offset="100%" stopColor="#f2f7ff" stopOpacity="0" />
+        </linearGradient>
+        <filter id="beam-blur" x="-15%" y="-40%" width="130%" height="180%">
+          <feGaussianBlur stdDeviation="4" />
+        </filter>
+      </defs>
+      {/* One cone per lamp, overlapping into a brighter patch down the middle */}
+      <g filter="url(#beam-blur)" fill="url(#beam-fade)">
+        <path d="M 114,12 L 290,-4 L 290,36 L 114,20 Z" />
+        <path d="M 114,40 L 290,24 L 290,64 L 114,48 Z" />
       </g>
     </svg>
   );
@@ -456,10 +508,10 @@ function RoadSlider({
           width: CAR_W,
           height: CAR_H,
           transform: `translate3d(${END_MARGIN - CAR_W / 2}px, ${LANE_BOTTOM - CAR_H / 2}px, 0)`,
-          filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.5))',
           willChange: 'transform',
         }}
       >
+        <HeadlightBeams />
         <CarSVG />
       </div>
     </div>
